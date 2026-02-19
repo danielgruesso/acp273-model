@@ -16,8 +16,12 @@ function ecr(minRate, days) {
   return minRate * (1 - r) + MAX_RATE * r;
 }
 
+// Calibrated so that at MinRate=10%, MaxRate=12%:
+// 24h ≈ 6.08%, 14d ≈ 6.12%, 365d ≈ 7.29% (matching ACP-273 stated values)
+const APY_SCALE = 60.74;
+
 function apyFor(minRate, days) {
-  return ((720e6 - 450e6) / 450e6) * ecr(minRate, days) * 100;
+  return ecr(minRate, days) * APY_SCALE;
 }
 
 function optVal(exitD, lockD, vol, cap) {
@@ -101,7 +105,7 @@ function Bar({ pct, color, label }) {
 const dc = { 1: "#ef4444", 7: "#f97316", 14: "#eab308", 30: "#84cc16", 60: "#22c55e", 90: "#14b8a6", 180: "#3b82f6", 365: "#8b5cf6" };
 
 export default function App() {
-  const [mr, setMr] = useState(6);
+  const [mr, setMr] = useState(10);
   const [vol, setVol] = useState(0.35);
   const [cap, setCap] = useState(0.08);
   const [tab, setTab] = useState("single");

@@ -120,16 +120,17 @@ export default function App() {
         ACP-273 + ACP-236: Validator Equilibrium Model
       </h2>
       <div style={{ fontSize: 11, color: "#22c55e", fontWeight: 600, marginBottom: 4 }}>
-        Calibrated with real P-Chain validator data (13,773 validators, last 365 days)
+        Calibrated with P-Chain validator data (13,773 staking transactions, last 365 days · ~709 active validators)
       </div>
       <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12, lineHeight: 1.5 }}>
         Simulates rational validators choosing staking durations under 24h minimum + auto-renewal.
+        Validators have natural planning horizons (monthly, quarterly, annual) that create intermediate preferences.
         <strong style={{ color: "#f87171" }}> If &gt;33% of stake converges on 24h, consensus safety is at risk.</strong>
       </p>
 
       {/* Real data baseline */}
       <div style={{ background: "rgba(59,130,246,0.1)", border: "1px solid #3b82f6", borderRadius: 8, padding: 12, marginBottom: 14 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#3b82f6", marginBottom: 8 }}>📊 Real P-Chain Validator Baseline (Current 14-Day Minimum)</div>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#3b82f6", marginBottom: 8 }}>📊 P-Chain Validator Baseline (Current 14-Day Minimum)</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div>
             <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 4, fontWeight: 600 }}>By Validator Count</div>
@@ -393,9 +394,9 @@ export default function App() {
       <details style={{ marginTop: 14 }}>
         <summary style={{ fontSize: 12, color: "#64748b", cursor: "pointer" }}>Model Assumptions & Calibration</summary>
         <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.7, marginTop: 8, padding: 12, background: "#1e293b", borderRadius: 8 }}>
-          <strong style={{ color: "#22c55e" }}>Calibrated with real P-Chain validator data:</strong> 13,773 Primary Network validators over last 365 days via Avalanche datalake.
+          <strong style={{ color: "#22c55e" }}>v4 — Intermediate duration preferences:</strong> Validators have natural planning horizons (biweekly, monthly, quarterly, semi-annual, annual) that create genuine preferences for intermediate durations, not just min vs max.
           <br /><br />
-          <strong style={{ color: "#94a3b8" }}>Key insight:</strong> Validators behave differently from delegators. By count, 73% are at ≤30 days. But by stake weight, only 6% is at the 14d minimum — large validators prefer longer durations. 47% of stake is at 31+ days.
+          <strong style={{ color: "#94a3b8" }}>Calibration source:</strong> 13,773 Primary Network validator staking transactions over last 365 days via Avalanche datalake (delta.lakehouse.validators). There are approximately 709 active validators at any given time; the larger dataset captures staking behavior across rotation cycles. Key finding: only 6% of stake is at the 14d minimum by weight, despite 33% by count. 47% of stake is at 31+ days.
           <br /><br />
           <strong style={{ color: "#94a3b8" }}>Population model:</strong> ~3% institutional long-term (high stake, low liquidity preference), ~4% medium-long, ~12% moderate (31-60d), ~40% short-term buffer (15-30d), ~38% minimum duration seekers. Stake sizes calibrated to match real averages.
           <br /><br />

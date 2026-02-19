@@ -33,21 +33,21 @@ With only a 2 percentage point spread between min (10%) and max (12%), the APY d
 
 ## Calibration Data
 
-The model is calibrated using P-Chain validator data from the Avalanche datalake (`delta.lakehouse.validators`), covering 13,773 `AddPermissionlessValidatorTx` transactions over the last 365 days. The current active validator set is approximately 709 validators; the larger transaction dataset captures staking behavior across rotation and re-staking cycles.
+The model is calibrated using P-Chain validator data from the Avalanche datalake (`delta.lakehouse.validators`), covering 11,918 valid `AddPermissionlessValidatorTx` events over the last 365 days, filtered for durations ≥14 days and valid start/end times. The current active validator set is approximately 709 validators; the larger transaction dataset captures staking behavior across rotation and re-staking cycles.
 
 ### Observed Validator Duration Distribution
 
 | Duration | % by Count | % by Stake Weight |
 |---|---|---|
-| 14 days (minimum) | 33.0% | **6.0%** |
-| 15–30 days | 39.9% | 43.3% |
-| 31–60 days | 11.8% | 18.5% |
-| 61–90 days | 4.2% | 9.2% |
-| 91–180 days | 3.5% | 6.7% |
-| 181–270 days | 0.6% | 0.6% |
-| 271–365 days | 3.1% | **12.5%** |
+| 14 days (minimum) | 26.8% | **6.1%** |
+| 15–30 days | 46.3% | 44.3% |
+| 31–60 days | 13.7% | 18.9% |
+| 61–90 days | 4.8% | 9.4% |
+| 91–180 days | 4.1% | 6.8% |
+| 181–270 days | 0.7% | 0.6% |
+| 271–365 days | 3.6% | **12.7%** |
 
-**Key insight:** Validators behave very differently from delegators. While 33% of validators by count choose the 14-day minimum, they represent only 6% of total stake weight. Large, high-stake validators strongly prefer longer durations — 47% of stake weight is committed for 31+ days. This inverse correlation between stake size and liquidity preference is a critical feature of the model calibration.
+**Key insight:** Validators behave very differently from delegators. While 26.8% of validators by count choose the 14-day minimum, they represent only 6.1% of total stake weight. Large, high-stake validators strongly prefer longer durations — 48% of stake weight is committed for 31+ days. This inverse correlation between stake size and liquidity preference is a critical feature of the model calibration.
 
 ## Model Design
 
@@ -200,3 +200,7 @@ Deployed on Vercel. Any push to `main` triggers automatic redeployment.
 - [ACP-236: Auto-Renewed Staking](https://github.com/avalanche-foundation/ACPs/blob/main/ACPs/236-auto-renewed-staking/README.md)
 - [Avalanche Rewards Formula Documentation](https://build.avax.network/docs/primary-network/validate/rewards-formula)
 - [Avalanche Staking Parameters](https://docs.avax.network/avalanche-l1s/elastic-avalanche-l1s/parameters)
+
+## License
+
+MIT

@@ -5,8 +5,8 @@ const MAX_RATE = 0.12;
 const DURATIONS = [1, 7, 14, 30, 60, 90, 180, 365];
 
 const REAL_DATA = {
-  byCount: { "14d": 33.0, "15-30d": 39.9, "31-60d": 11.8, "61-90d": 4.2, "91-180d": 3.5, "181-270d": 0.6, "271-365d": 3.1 },
-  byStake: { "14d": 6.0, "15-30d": 43.3, "31-60d": 18.5, "61-90d": 9.2, "91-180d": 6.7, "181-270d": 0.6, "271-365d": 12.5 }
+  byCount: { "14d": 26.8, "15-30d": 46.3, "31-60d": 13.7, "61-90d": 4.8, "91-180d": 4.1, "181-270d": 0.7, "271-365d": 3.6 },
+  byStake: { "14d": 6.1, "15-30d": 44.3, "31-60d": 18.9, "61-90d": 9.4, "91-180d": 6.8, "181-270d": 0.6, "271-365d": 12.7 }
 };
 
 function ecr(minRate, days) {
@@ -132,7 +132,7 @@ export default function App() {
         ACP-273 + ACP-236: Validator Equilibrium Model
       </h2>
       <div style={{ fontSize: 11, color: "#22c55e", fontWeight: 600, marginBottom: 4 }}>
-        Calibrated with P-Chain validator data (13,773 staking transactions, last 365 days · ~709 active validators)
+        Calibrated with P-Chain validator data (11,918 staking events, 365 days · ~709 active validators)
       </div>
       <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12, lineHeight: 1.5 }}>
         Simulates rational validators choosing staking durations under 24h minimum + auto-renewal.
@@ -146,20 +146,20 @@ export default function App() {
           <div>
             <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 4, fontWeight: 600 }}>By Validator Count</div>
             {[
-              { l: "14d (min)", v: 33.0 }, { l: "15-30d", v: 39.9 }, { l: "31-60d", v: 11.8 },
-              { l: "61-90d", v: 4.2 }, { l: "91-180d", v: 3.5 }, { l: "181-270d", v: 0.6 }, { l: "271-365d", v: 3.1 }
-            ].map(d => <Bar key={d.l} pct={d.v} color={d.v === 33.0 ? "#eab308" : d.v === 39.9 ? "#84cc16" : "#3b82f6"} label={d.l} />)}
+              { l: "14d (min)", v: 26.8 }, { l: "15-30d", v: 46.3 }, { l: "31-60d", v: 13.7 },
+              { l: "61-90d", v: 4.8 }, { l: "91-180d", v: 4.1 }, { l: "181-270d", v: 0.7 }, { l: "271-365d", v: 3.6 }
+            ].map(d => <Bar key={d.l} pct={d.v} color={d.v === 26.8 ? "#eab308" : d.v === 46.3 ? "#84cc16" : "#3b82f6"} label={d.l} />)}
           </div>
           <div>
             <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 4, fontWeight: 600 }}>By Stake Weight (AVAX)</div>
             {[
-              { l: "14d (min)", v: 6.0 }, { l: "15-30d", v: 43.3 }, { l: "31-60d", v: 18.5 },
-              { l: "61-90d", v: 9.2 }, { l: "91-180d", v: 6.7 }, { l: "181-270d", v: 0.6 }, { l: "271-365d", v: 12.5 }
-            ].map(d => <Bar key={d.l} pct={d.v} color={d.v === 6.0 ? "#22c55e" : d.v === 43.3 ? "#84cc16" : "#3b82f6"} label={d.l} />)}
+              { l: "14d (min)", v: 6.1 }, { l: "15-30d", v: 44.3 }, { l: "31-60d", v: 18.9 },
+              { l: "61-90d", v: 9.4 }, { l: "91-180d", v: 6.8 }, { l: "181-270d", v: 0.6 }, { l: "271-365d", v: 12.7 }
+            ].map(d => <Bar key={d.l} pct={d.v} color={d.v === 6.1 ? "#22c55e" : d.v === 44.3 ? "#84cc16" : "#3b82f6"} label={d.l} />)}
           </div>
         </div>
         <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 8, borderTop: "1px solid #334155", paddingTop: 6 }}>
-          <strong>Key insight:</strong> Only 6% of validator <em>stake</em> is at the 14d minimum (vs 33% by count). Large validators choose longer durations. 47% of stake is at 31+ days.
+          <strong>Key insight:</strong> Only 6.1% of validator <em>stake</em> is at the 14d minimum (vs 26.8% by count). Large validators choose longer durations. 48% of stake is at 31+ days.
         </div>
       </div>
 
@@ -408,7 +408,7 @@ export default function App() {
         <div style={{ fontSize: 11, color: "#64748b", lineHeight: 1.7, marginTop: 8, padding: 12, background: "#1e293b", borderRadius: 8 }}>
           <strong style={{ color: "#22c55e" }}>v4 — Intermediate duration preferences:</strong> Validators have natural planning horizons (biweekly, monthly, quarterly, semi-annual, annual) that create genuine preferences for intermediate durations, not just min vs max.
           <br /><br />
-          <strong style={{ color: "#94a3b8" }}>Calibration source:</strong> 13,773 Primary Network validator staking transactions over last 365 days via Avalanche datalake (delta.lakehouse.validators). There are approximately 709 active validators at any given time; the larger dataset captures staking behavior across rotation cycles. Key finding: only 6% of stake is at the 14d minimum by weight, despite 33% by count. 47% of stake is at 31+ days.
+          <strong style={{ color: "#94a3b8" }}>Calibration source:</strong> 11,918 Primary Network validator staking events over last 365 days via Avalanche datalake (delta.lakehouse.validators), filtered for valid durations (≥14 days). There are approximately 709 active validators at any given time; the larger dataset captures staking behavior across rotation cycles. Key finding: only 6.1% of stake is at the 14d minimum by weight, despite 26.8% by count. 48% of stake is at 31+ days.
           <br /><br />
           <strong style={{ color: "#94a3b8" }}>Decision model:</strong> Each validator has a target duration (planning horizon) and flexibility sensitivity. Utility = APY − flexibility_cost − deviation_penalty + proximity_bonus. The deviation penalty discourages choosing durations far from the validator's natural planning cycle. Option value uses nonlinear uncertainty growth (quadratic term) so long locks are disproportionately costly vs short ones.
           <br /><br />

@@ -6,9 +6,7 @@ const DURATIONS = [1, 7, 14, 30, 60, 90, 180, 365];
 
 const REAL_DATA = {
   byCount: { "14d": 33.0, "15-30d": 39.9, "31-60d": 11.8, "61-90d": 4.2, "91-180d": 3.5, "181-270d": 0.6, "271-365d": 3.1 },
-  byStake: { "14d": 6.0, "15-30d": 43.3, "31-60d": 18.5, "61-90d": 9.2, "91-180d": 6.7, "181-270d": 0.6, "271-365d": 12.5 },
-  totalValidators: 13773,
-  totalStake: 1069190664
+  byStake: { "14d": 6.0, "15-30d": 43.3, "31-60d": 18.5, "61-90d": 9.2, "91-180d": 6.7, "181-270d": 0.6, "271-365d": 12.5 }
 };
 
 function ecr(minRate, days) {
@@ -16,8 +14,6 @@ function ecr(minRate, days) {
   return minRate * (1 - r) + MAX_RATE * r;
 }
 
-// Calibrated so that at MinRate=10%, MaxRate=12%:
-// 24h ≈ 6.08%, 14d ≈ 6.12%, 365d ≈ 7.29% (matching ACP-273 stated values)
 const APY_SCALE = 60.74;
 
 function apyFor(minRate, days) {
@@ -27,21 +23,28 @@ function apyFor(minRate, days) {
 function optVal(exitD, lockD, vol, cap) {
   if (exitD >= lockD) return 0;
   const t = (lockD - exitD) / 365;
-  return vol * Math.sqrt(t) * 0.4 + cap * t;
+  return vol * Math.sqrt(t) * 0.4 + cap * t + vol * t * t * 0.15;
 }
 
 function genValidators(n = 2000) {
   const v = [];
   for (let i = 0; i < n; i++) {
     const r = Math.random();
-    let lp, stake;
-    if (r < 0.03) { lp = Math.random() * 0.05; stake = 200000 + Math.random() * 1200000; }
-    else if (r < 0.06) { lp = 0.05 + Math.random() * 0.1; stake = 50000 + Math.random() * 500000; }
-    else if (r < 0.10) { lp = 0.1 + Math.random() * 0.12; stake = 30000 + Math.random() * 300000; }
-    else if (r < 0.22) { lp = 0.15 + Math.random() * 0.15; stake = 20000 + Math.random() * 250000; }
-    else if (r < 0.62) { lp = 0.3 + Math.random() * 0.2; stake = 2000 + Math.random() * 300000; }
-    else { lp = 0.5 + Math.random() * 0.5; stake = 2000 + Math.random() * 30000; }
-    v.push({ lp, stake });
+    let targetDays, flexSensitivity, stake;
+    if (r < 0.03) {
+      targetDays = 300 + Math.random() * 65; flexSensitivity = 0.02 + Math.random() * 0.05; stake = 200000 + Math.random() * 1200000;
+    } else if (r < 0.06) {
+      targetDays = 150 + Math.random() * 60; flexSensitivity = 0.05 + Math.random() * 0.08; stake = 50000 + Math.random() * 500000;
+    } else if (r < 0.10) {
+      targetDays = 75 + Math.random() * 30; flexSensitivity = 0.08 + Math.random() * 0.1; stake = 30000 + Math.random() * 300000;
+    } else if (r < 0.22) {
+      targetDays = 28 + Math.random() * 35; flexSensitivity = 0.12 + Math.random() * 0.15; stake = 20000 + Math.random() * 250000;
+    } else if (r < 0.55) {
+      targetDays = 14 + Math.random() * 18; flexSensitivity = 0.2 + Math.random() * 0.2; stake = 2000 + Math.random() * 300000;
+    } else {
+      targetDays = 1 + Math.random() * 7; flexSensitivity = 0.4 + Math.random() * 0.6; stake = 2000 + Math.random() * 30000;
+    }
+    v.push({ targetDays, flexSensitivity, stake });
   }
   return v;
 }
@@ -56,7 +59,12 @@ function runSim(mr, vol, cap, vals) {
   vals.forEach(v => {
     let bd = 1, bu = -Infinity;
     DURATIONS.forEach(d => {
-      const u = apys[d] - v.lp * optVal(1, d, vol, cap) * 100;
+      const reward = apys[d];
+      const flexCost = v.flexSensitivity * optVal(1, d, vol, cap) * 100;
+      const devDays = Math.abs(d - v.targetDays);
+      const devPenalty = (devDays / 365) * v.flexSensitivity * 2.0;
+      const nearBonus = d >= v.targetDays * 0.7 && d <= v.targetDays * 1.5 ? 0.15 : 0;
+      const u = reward - flexCost - devPenalty + nearBonus;
       if (u > bu) { bu = u; bd = d; }
     });
     sbd[bd] += v.stake; cbd[bd]++;
@@ -132,7 +140,6 @@ export default function App() {
         <strong style={{ color: "#f87171" }}> If &gt;33% of stake converges on 24h, consensus safety is at risk.</strong>
       </p>
 
-      {/* Real data baseline */}
       <div style={{ background: "rgba(59,130,246,0.1)", border: "1px solid #3b82f6", borderRadius: 8, padding: 12, marginBottom: 14 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#3b82f6", marginBottom: 8 }}>📊 P-Chain Validator Baseline (Current 14-Day Minimum)</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -337,7 +344,7 @@ export default function App() {
           { name: "MinRate=10% (current)", d: s10, color: "#ef4444", note: "No consumption rate change" },
           { name: "MinRate=8%", d: s8, color: "#f97316", note: "Modest reduction" },
           { name: "MinRate=6%", d: s6, color: "#eab308", note: "Moderate spread" },
-          { name: "MinRate=4%", d: s4, color: "#22c55e", note: "Strong incentive for longer commitments" }
+          { name: "MinRate=4%", d: s4, color: "#22c55e", note: "Strong longer-term incentive" }
         ];
         return (
           <div>
@@ -376,6 +383,7 @@ export default function App() {
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#64748b", marginTop: 4 }}>
                   <span>24h: {s.d.apys[1].toFixed(2)}%</span>
                   <span>14d: {s.d.apys[14].toFixed(2)}%</span>
+                  <span>90d: {s.d.apys[90].toFixed(2)}%</span>
                   <span>365d: {s.d.apys[365].toFixed(2)}%</span>
                   <span>Spread: {(s.d.apys[365] - s.d.apys[1]).toFixed(2)}pp</span>
                 </div>
@@ -402,21 +410,24 @@ export default function App() {
           <br /><br />
           <strong style={{ color: "#94a3b8" }}>Calibration source:</strong> 13,773 Primary Network validator staking transactions over last 365 days via Avalanche datalake (delta.lakehouse.validators). There are approximately 709 active validators at any given time; the larger dataset captures staking behavior across rotation cycles. Key finding: only 6% of stake is at the 14d minimum by weight, despite 33% by count. 47% of stake is at 31+ days.
           <br /><br />
-          <strong style={{ color: "#94a3b8" }}>Population model:</strong> ~3% institutional long-term (high stake, low liquidity preference), ~4% medium-long, ~12% moderate (31-60d), ~40% short-term buffer (15-30d), ~38% minimum duration seekers. Stake sizes calibrated to match real averages.
+          <strong style={{ color: "#94a3b8" }}>Decision model:</strong> Each validator has a target duration (planning horizon) and flexibility sensitivity. Utility = APY − flexibility_cost − deviation_penalty + proximity_bonus. The deviation penalty discourages choosing durations far from the validator's natural planning cycle. Option value uses nonlinear uncertainty growth (quadratic term) so long locks are disproportionately costly vs short ones.
           <br /><br />
-          <strong style={{ color: "#94a3b8" }}>Decision:</strong> utility = APY − liquidity_preference × option_value. Option value uses simplified Black-Scholes pricing for exit flexibility. Monte Carlo averaged over 8-12 runs.
+          <strong style={{ color: "#94a3b8" }}>Population:</strong> ~45% minimum seekers, ~33% biweekly/short planners, ~12% monthly, ~4% quarterly, ~3% semi-annual, ~3% annual. Stake sizes inversely correlated with flexibility preference (large validators choose longer durations).
           <br /><br />
-          <strong style={{ color: "#94a3b8" }}>Formula:</strong> EffectiveConsumptionRate = MinRate × (1 − StakingPeriod/365) + MaxRate × (StakingPeriod/365). MaxConsumptionRate fixed at 12%. APY ≈ ((720M − 450M) / 450M) × ECR × 100.
+          <strong style={{ color: "#94a3b8" }}>Formula:</strong> EffectiveConsumptionRate = MinRate × (1 − StakingPeriod/365) + MaxRate × (StakingPeriod/365). MaxConsumptionRate fixed at 12%.
           <br /><br />
-          <strong style={{ color: "#94a3b8" }}>Limitations:</strong> Static equilibrium, not dynamic. Doesn't model strategic interactions, MEV, fee revenue, or non-economic motivations. Results are directional, not precise.
+          <strong style={{ color: "#94a3b8" }}>Limitations:</strong> Static equilibrium, not dynamic. Monte Carlo averaged over 8-12 runs. Results are directional, not precise.
           <br /><br />
           <a href="https://github.com/avalanche-foundation/ACPs/discussions/274" target="_blank" style={{ color: "#3b82f6" }}>→ ACP-273 Discussion</a>
         </div>
       </details>
 
-      <div style={{ marginTop: 16, padding: 12, borderTop: "1px solid #1e293b", fontSize: 10, color: "#475569", textAlign: "center" }}>
-        Built for <a href="https://github.com/avalanche-foundation/ACPs/discussions/274" target="_blank" style={{ color: "#64748b" }}>ACP-273</a> analysis.
-        Model source data: Avalanche P-Chain (delta.lakehouse.validators).
+      <div style={{ marginTop: 16, padding: 12, borderTop: "1px solid #1e293b", fontSize: 10, color: "#475569", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+        <div>Built for <a href="https://github.com/avalanche-foundation/ACPs/discussions/274" target="_blank" style={{ color: "#64748b" }}>ACP-273</a> analysis. Data source: Avalanche P-Chain.</div>
+        <a href="https://github.com/danielgruesso/acp273-model/" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 6, border: "1px solid #334155", background: "#1e293b", color: "#94a3b8", textDecoration: "none", fontSize: 11 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          Edit on GitHub
+        </a>
       </div>
     </div>
   );
